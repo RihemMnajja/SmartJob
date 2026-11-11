@@ -1,0 +1,99 @@
+<app-page-header eyebrow="Account" title="Settings" subtitle="Manage your company profile and account security." />
+
+@if (loading()) {
+  <app-loading-spinner label="Loading settings…" />
+} @else {
+  <div class="max-w-2xl space-y-6">
+    <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+      <h3 class="font-display text-base font-semibold text-ink-900">Company profile</h3>
+      <p class="mt-1 text-sm text-ink-500">This information appears on your job offers.</p>
+
+      <form [formGroup]="companyForm" (ngSubmit)="saveCompany()" class="mt-5 space-y-4">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">Company name</label>
+            <input formControlName="companyName" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">Company email</label>
+            <input formControlName="companyEmail" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">Phone</label>
+            <input formControlName="phone" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">Your position</label>
+            <input formControlName="position" placeholder="e.g. Talent Acquisition Manager" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="savingCompany()"
+          class="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lift transition hover:bg-primary-600 disabled:opacity-60"
+        >
+          @if (savingCompany()) {
+            <span class="material-icons-round animate-spin text-[18px]">progress_activity</span>
+          }
+          Save company profile
+        </button>
+      </form>
+    </div>
+
+    <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+      <h3 class="font-display text-base font-semibold text-ink-900">Change password</h3>
+      <p class="mt-1 text-sm text-ink-500">Choose a strong password you don't use elsewhere.</p>
+
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()" class="mt-5 space-y-4">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-ink-700">Current password</label>
+          <input type="password" formControlName="oldPassword" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          @if (pf.oldPassword.invalid && pf.oldPassword.touched) {
+            <p class="mt-1.5 text-xs font-medium text-rose-600">Current password is required.</p>
+          }
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">New password</label>
+            <input type="password" formControlName="newPassword" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+            @if (pf.newPassword.invalid && pf.newPassword.touched) {
+              <p class="mt-1.5 text-xs font-medium text-rose-600">Min. 6 characters.</p>
+            }
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">Confirm new password</label>
+            <input type="password" formControlName="confirmPassword" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+            @if (passwordForm.errors?.['mismatch'] && pf.confirmPassword.touched) {
+              <p class="mt-1.5 text-xs font-medium text-rose-600">Passwords don't match.</p>
+            }
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="savingPassword()"
+          class="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lift transition hover:bg-primary-600 disabled:opacity-60"
+        >
+          @if (savingPassword()) {
+            <span class="material-icons-round animate-spin text-[18px]">progress_activity</span>
+          }
+          Update password
+        </button>
+      </form>
+    </div>
+
+    <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+      <h3 class="font-display text-base font-semibold text-ink-900">Session</h3>
+      <p class="mt-1 text-sm text-ink-500">Sign out of SmartJob on this device.</p>
+      <button
+        type="button"
+        (click)="logout()"
+        class="mt-4 inline-flex items-center gap-2 rounded-xl border border-ink-200 px-5 py-2.5 text-sm font-semibold text-ink-700 hover:bg-ink-100"
+      >
+        <span class="material-icons-round text-[18px]">logout</span>
+        Sign out
+      </button>
+    </div>
+  </div>
+}

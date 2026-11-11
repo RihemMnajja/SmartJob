@@ -1,0 +1,192 @@
+@if (loading()) {
+  <app-loading-spinner label="Loading candidate…" />
+} @else if (!application()) {
+  <div class="rounded-2xl border border-ink-100 bg-white p-10 text-center shadow-card">
+    <p class="text-ink-500">This application could not be found.</p>
+  </div>
+} @else {
+  <button type="button" (click)="goBack()" class="mb-6 inline-flex items-center gap-1 text-sm font-semibold text-ink-500 hover:text-primary-600">
+    <span class="material-icons-round text-[18px]">arrow_back</span>
+    Back to ranking
+  </button>
+
+  <div class="grid gap-6 lg:grid-cols-3">
+    <!-- Candidate identity + actions -->
+    <div class="space-y-6 lg:col-span-1">
+      <div class="rounded-2xl border border-ink-100 bg-white p-6 text-center shadow-card">
+        @if (photoUrl()) {
+          <app-secure-image [src]="photoUrl()" imgClass="mx-auto h-24 w-24 rounded-full object-cover ring-4 ring-primary-50" [initials]="initials()" fallbackClass="mx-auto h-24 w-24 rounded-full ring-4 ring-primary-50 text-2xl" />
+        } @else {
+          <div class="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-primary-500 text-2xl font-bold text-white ring-4 ring-primary-50">
+            {{ initials() }}
+          </div>
+        }
+        <h1 class="mt-4 font-display text-lg font-bold text-ink-900">
+          {{ application()?.candidate?.firstName }} {{ application()?.candidate?.lastName }}
+        </h1>
+        <p class="text-sm text-ink-500">{{ application()?.candidate?.professionalTitle || 'Candidate' }}</p>
+
+        <div class="mt-4 flex items-center justify-center gap-2">
+          <app-score-badge [score]="application()?.scoreIa" />
+          <app-status-badge [status]="application()?.status" />
+        </div>
+
+        <div class="mt-5 space-y-2 text-left text-sm text-ink-600">
+          @if (application()?.candidate?.city) {
+            <p class="flex items-center gap-2"><span class="material-icons-round text-[16px] text-ink-400">place</span>{{ application()?.candidate?.city }}</p>
+          }
+          @if (application()?.candidate?.user?.email) {
+            <p class="flex items-center gap-2"><span class="material-icons-round text-[16px] text-ink-400">mail</span>{{ application()?.candidate?.user?.email }}</p>
+          }
+          @if (application()?.candidate?.phone) {
+            <p class="flex items-center gap-2"><span class="material-icons-round text-[16px] text-ink-400">call</span>{{ application()?.candidate?.phone }}</p>
+          }
+          @if (application()?.candidate?.linkedin) {
+            <p class="flex items-center gap-2"><span class="material-icons-round text-[16px] text-ink-400">link</span>{{ application()?.candidate?.linkedin }}</p>
+          }
+          @if (application()?.candidate?.github) {
+            <p class="flex items-center gap-2"><span class="material-icons-round text-[16px] text-ink-400">code</span>{{ application()?.candidate?.github }}</p>
+          }
+        </div>
+
+        <button
+          type="button"
+          (click)="viewCv()"
+          class="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-ink-900 py-2.5 text-sm font-semibold text-white hover:bg-ink-800"
+        >
+          <span class="material-icons-round text-[18px]">description</span>
+          View CV
+        </button>
+      </div>
+
+      <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+        <h3 class="font-display text-sm font-semibold text-ink-900">Actions</h3>
+        <div class="mt-4 grid grid-cols-2 gap-2">
+          <button type="button" (click)="reanalyze()" [disabled]="analyzing()" class="rounded-xl border border-ink-200 py-2 text-xs font-semibold text-primary-600 hover:bg-primary-50 disabled:opacity-60">
+            {{ analyzing() ? 'Analyzing…' : 'Re-analyze' }}
+          </button>
+          <button type="button" (click)="setStatus('SHORTLISTED')" [disabled]="updatingStatus()" class="rounded-xl border border-ink-200 py-2 text-xs font-semibold text-ink-700 hover:bg-ink-100 disabled:opacity-60">
+            Shortlist
+          </button>
+          <button type="button" (click)="setStatus('INTERVIEW')" [disabled]="updatingStatus()" class="rounded-xl border border-ink-200 py-2 text-xs font-semibold text-primary-600 hover:bg-primary-50 disabled:opacity-60">
+            Invite to interview
+          </button>
+          <button type="button" (click)="setStatus('ACCEPTED')" [disabled]="updatingStatus()" class="rounded-xl border border-emerald-200 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-60">
+            Accept
+          </button>
+          <button type="button" (click)="setStatus('REJECTED')" [disabled]="updatingStatus()" class="col-span-2 rounded-xl border border-rose-200 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-60">
+            Reject application
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Details -->
+    <div class="space-y-6 lg:col-span-2">
+      <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display text-base font-semibold text-ink-900">AI Analysis</h3>
+          <app-score-badge [score]="application()?.scoreIa" />
+        </div>
+        @if (application()?.aiFeedback) {
+          <p class="mt-3 text-sm text-ink-600">{{ application()?.aiFeedback }}</p>
+        } @else {
+          <p class="mt-3 text-sm text-ink-400">No AI feedback available yet — try re-analyzing.</p>
+        }
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+          @if (application()?.strengths?.length) {
+            <div class="rounded-xl bg-emerald-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Strengths</p>
+              <div class="mt-2 flex flex-wrap gap-1.5">
+                @for (s of application()?.strengths; track s) {
+                  <span class="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-emerald-700">{{ s }}</span>
+                }
+              </div>
+            </div>
+          }
+          @if (application()?.missingSkills?.length) {
+            <div class="rounded-xl bg-rose-50 p-4">
+              <p class="text-xs font-semibold uppercase tracking-wide text-rose-700">Missing skills</p>
+              <div class="mt-2 flex flex-wrap gap-1.5">
+                @for (s of application()?.missingSkills; track s) {
+                  <span class="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-rose-700">{{ s }}</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+        <h3 class="font-display text-base font-semibold text-ink-900">Summary</h3>
+        <p class="mt-2 text-sm text-ink-600">{{ application()?.candidate?.summary || 'No summary provided.' }}</p>
+      </div>
+
+      <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+        <h3 class="font-display text-base font-semibold text-ink-900">Experience</h3>
+        @if (!application()?.candidate?.experiences?.length) {
+          <p class="mt-2 text-sm text-ink-400">No experience listed.</p>
+        } @else {
+          <div class="mt-4 space-y-4">
+            @for (exp of application()?.candidate?.experiences; track exp.id) {
+              <div class="relative border-l-2 border-primary-100 pl-4">
+                <span class="absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full bg-primary-500"></span>
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                  <p class="text-sm font-semibold text-ink-900">{{ exp.position }} · {{ exp.company }}</p>
+                  <p class="text-xs text-ink-400">{{ exp.startDate }} — {{ exp.endDate || 'Present' }}</p>
+                </div>
+                @if (exp.description) { <p class="mt-1 text-sm text-ink-600">{{ exp.description }}</p> }
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="grid gap-6 sm:grid-cols-2">
+        <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+          <h3 class="font-display text-base font-semibold text-ink-900">Education</h3>
+          @if (!application()?.candidate?.educations?.length) {
+            <p class="mt-2 text-sm text-ink-400">No education listed.</p>
+          } @else {
+            <ul class="mt-3 space-y-3 text-sm">
+              @for (edu of application()?.candidate?.educations; track edu.id) {
+                <li>
+                  <p class="font-semibold text-ink-900">{{ edu.diploma }}</p>
+                  <p class="text-xs text-ink-500">{{ edu.establishment }} · {{ edu.year }}</p>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+          <h3 class="font-display text-base font-semibold text-ink-900">Skills</h3>
+          @if (!application()?.candidate?.skills?.length) {
+            <p class="mt-2 text-sm text-ink-400">No skills listed.</p>
+          } @else {
+            <div class="mt-3 flex flex-wrap gap-2">
+              @for (s of application()?.candidate?.skills; track s.id) {
+                <span class="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">{{ s.name }}</span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (application()?.candidate?.projects?.length) {
+        <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+          <h3 class="font-display text-base font-semibold text-ink-900">Projects</h3>
+          <div class="mt-4 grid gap-4 sm:grid-cols-2">
+            @for (proj of application()?.candidate?.projects; track proj.id) {
+              <div class="rounded-xl border border-ink-100 p-4">
+                <p class="text-sm font-semibold text-ink-900">{{ proj.name }}</p>
+                @if (proj.description) { <p class="mt-1 text-xs text-ink-500">{{ proj.description }}</p> }
+                @if (proj.technologies) { <p class="mt-2 text-xs font-medium text-primary-600">{{ proj.technologies }}</p> }
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+}

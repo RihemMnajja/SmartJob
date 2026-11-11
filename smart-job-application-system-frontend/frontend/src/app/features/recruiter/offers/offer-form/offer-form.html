@@ -1,0 +1,97 @@
+<app-page-header
+  [eyebrow]="isEdit() ? 'Edit job offer' : 'New job offer'"
+  [title]="isEdit() ? 'Edit job offer' : 'Create a job offer'"
+  subtitle="Describe the role clearly — our AI uses this to score every applicant's CV."
+>
+  <a routerLink="/recruiter/offers" class="inline-flex items-center gap-2 rounded-xl border border-ink-200 px-4 py-2.5 text-sm font-semibold text-ink-700 hover:bg-ink-100">
+    Cancel
+  </a>
+</app-page-header>
+
+@if (loading()) {
+  <app-loading-spinner label="Loading job offer…" />
+} @else {
+  <form [formGroup]="form" (ngSubmit)="submit()" class="max-w-3xl space-y-6 rounded-2xl border border-ink-100 bg-white p-6 shadow-card sm:p-8">
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-ink-700">Job title</label>
+      <input
+        formControlName="title"
+        placeholder="e.g. Senior Java Spring Boot Developer"
+        class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+      />
+      @if (form.controls.title.invalid && form.controls.title.touched) {
+        <p class="mt-1.5 text-xs font-medium text-rose-600">Job title is required.</p>
+      }
+    </div>
+
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-ink-700">Description</label>
+      <textarea
+        formControlName="description"
+        rows="6"
+        placeholder="Describe responsibilities, requirements, and what makes this role great…"
+        class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+      ></textarea>
+      @if (form.controls.description.invalid && form.controls.description.touched) {
+        <p class="mt-1.5 text-xs font-medium text-rose-600">Description is required.</p>
+      }
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-ink-700">Location</label>
+        <input
+          formControlName="location"
+          placeholder="e.g. Paris, France (Remote)"
+          class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+        />
+        @if (form.controls.location.invalid && form.controls.location.touched) {
+          <p class="mt-1.5 text-xs font-medium text-rose-600">Location is required.</p>
+        }
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-ink-700">Contract type</label>
+        <select formControlName="contractType" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100">
+          @for (c of contractTypes; track c) { <option [value]="c">{{ c }}</option> }
+        </select>
+      </div>
+    </div>
+
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-ink-700">Required skills</label>
+      <input
+        formControlName="requiredSkills"
+        placeholder="Comma-separated, e.g. Java, Spring Boot, PostgreSQL, REST APIs"
+        class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+      />
+      <p class="mt-1.5 text-xs text-ink-400">These are compared against each candidate's CV during AI analysis.</p>
+      @if (form.controls.requiredSkills.invalid && form.controls.requiredSkills.touched) {
+        <p class="mt-1.5 text-xs font-medium text-rose-600">Please list at least one required skill.</p>
+      }
+    </div>
+
+    @if (isEdit()) {
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-ink-700">Status</label>
+        <select formControlName="status" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100">
+          <option value="OPEN">Open</option>
+          <option value="CLOSED">Closed</option>
+        </select>
+      </div>
+    }
+
+    <div class="flex justify-end gap-3 border-t border-ink-100 pt-6">
+      <a routerLink="/recruiter/offers" class="rounded-xl px-5 py-2.5 text-sm font-semibold text-ink-600 hover:bg-ink-100">Cancel</a>
+      <button
+        type="submit"
+        [disabled]="saving()"
+        class="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lift transition hover:bg-primary-600 disabled:opacity-60"
+      >
+        @if (saving()) {
+          <span class="material-icons-round animate-spin text-[18px]">progress_activity</span>
+        }
+        {{ isEdit() ? 'Save changes' : 'Publish job offer' }}
+      </button>
+    </div>
+  </form>
+}

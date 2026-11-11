@@ -1,0 +1,88 @@
+<app-auth-shell
+  headline="Your next role starts with a great profile."
+  subheadline="Create your candidate account and let AI match you with roles that fit your real skills."
+>
+  <p class="text-xs font-semibold uppercase tracking-wider text-primary-500">Candidate sign up</p>
+  <h1 class="mt-2 font-display text-2xl font-bold text-ink-900">Create your candidate account</h1>
+  <p class="mt-2 text-sm text-ink-500">
+    Already have an account?
+    <a routerLink="/auth/login" class="font-semibold text-primary-600 hover:underline">Sign in</a>
+    · Hiring instead?
+    <a routerLink="/auth/register/recruiter" class="font-semibold text-primary-600 hover:underline">Recruiter sign up</a>
+  </p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="mt-8 space-y-5">
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-ink-700" for="name">Full name</label>
+      <input
+        id="name"
+        type="text"
+        formControlName="name"
+        placeholder="Jane Doe"
+        class="w-full rounded-xl border border-ink-200 bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-ink-300 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+      />
+      @if (f.name.invalid && f.name.touched) {
+        <p class="mt-1.5 text-xs font-medium text-rose-600">Please enter your full name.</p>
+      }
+    </div>
+
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-ink-700" for="email">Email address</label>
+      <input
+        id="email"
+        type="email"
+        formControlName="email"
+        placeholder="you@example.com"
+        class="w-full rounded-xl border border-ink-200 bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-ink-300 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+      />
+      @if (f.email.invalid && f.email.touched) {
+        <p class="mt-1.5 text-xs font-medium text-rose-600">Please enter a valid email address.</p>
+      }
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-ink-700" for="password">Password</label>
+        <input
+          id="password"
+          [type]="showPassword() ? 'text' : 'password'"
+          formControlName="password"
+          placeholder="••••••••"
+          class="w-full rounded-xl border border-ink-200 bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-ink-300 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+        />
+        @if (f.password.invalid && f.password.touched) {
+          <p class="mt-1.5 text-xs font-medium text-rose-600">Min. 6 characters.</p>
+        }
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-ink-700" for="confirmPassword">Confirm password</label>
+        <input
+          id="confirmPassword"
+          [type]="showPassword() ? 'text' : 'password'"
+          formControlName="confirmPassword"
+          placeholder="••••••••"
+          class="w-full rounded-xl border border-ink-200 bg-white px-4 py-3 text-sm text-ink-900 placeholder:text-ink-300 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+        />
+        @if (form.errors?.['mismatch'] && f.confirmPassword.touched) {
+          <p class="mt-1.5 text-xs font-medium text-rose-600">Passwords don't match.</p>
+        }
+      </div>
+    </div>
+
+    <label class="flex items-center gap-2 text-sm text-ink-600">
+      <input type="checkbox" (change)="showPassword.set(!showPassword())" class="h-4 w-4 rounded border-ink-300 text-primary-500 focus:ring-primary-400" />
+      Show passwords
+    </label>
+
+    <button
+      type="submit"
+      [disabled]="submitting()"
+      class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-500 py-3.5 text-sm font-semibold text-white shadow-lift transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      @if (submitting()) {
+        <span class="material-icons-round animate-spin text-[18px]">progress_activity</span>
+      }
+      Create account
+    </button>
+  </form>
+</app-auth-shell>

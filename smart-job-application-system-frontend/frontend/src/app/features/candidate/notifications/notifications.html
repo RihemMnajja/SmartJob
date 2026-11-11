@@ -1,0 +1,26 @@
+<app-page-header eyebrow="Inbox" title="Notifications" subtitle="Updates on your applications, AI scores, and status changes." />
+
+@if (loading()) {
+  <app-loading-spinner label="Loading notifications…" />
+} @else if (notifications().length === 0) {
+  <app-empty-state icon="notifications_none" title="You're all caught up! ✨" description="You'll see updates here as recruiters review your applications." />
+} @else {
+  <div class="space-y-3">
+    @for (n of notifications(); track n.id) {
+      <a [routerLink]="n.link" class="flex items-start gap-4 rounded-2xl border border-ink-100 bg-white p-5 shadow-card transition hover:-translate-y-0.5 hover:shadow-soft">
+        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg" [class]="n.iconClass">
+          <span aria-hidden="true">{{ n.emoji }}</span>
+        </span>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-sm font-semibold text-ink-900">{{ n.title }}</p>
+            @if (n.date) {
+              <p class="shrink-0 text-xs text-ink-400">{{ n.date | date: 'MMM d, y' }}</p>
+            }
+          </div>
+          <p class="mt-1 text-sm text-ink-500">{{ n.message }}</p>
+        </div>
+      </a>
+    }
+  </div>
+}

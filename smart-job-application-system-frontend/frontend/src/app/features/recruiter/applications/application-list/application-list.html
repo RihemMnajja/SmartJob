@@ -1,0 +1,105 @@
+@if (loading()) {
+  <app-loading-spinner label="Loading candidates…" />
+} @else {
+  <a routerLink="/recruiter/offers" class="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-ink-500 hover:text-primary-600">
+    <span class="material-icons-round text-[18px]">arrow_back</span>
+    Back to job offers
+  </a>
+
+  <app-page-header eyebrow="Candidate ranking" [title]="offer()?.title || 'Job offer'" subtitle="Candidates ranked automatically by AI match score, highest first." />
+
+  @if (applications().length === 0) {
+    <app-empty-state icon="groups" title="No applications yet" description="Once candidates apply, they'll appear here ranked by AI score." />
+  } @else {
+    <div class="overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-card">
+      <table class="w-full text-left text-sm">
+        <thead class="border-b border-ink-100 bg-ink-50/60 text-xs font-semibold uppercase tracking-wide text-ink-500">
+          <tr>
+            <th class="px-5 py-3">Candidate</th>
+            <th class="px-5 py-3">AI Score</th>
+            <th class="px-5 py-3">Status</th>
+            <th class="px-5 py-3">Applied</th>
+            <th class="px-5 py-3 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-ink-100">
+          @for (app of applications(); track app.id) {
+            <tr class="transition hover:bg-ink-50/50">
+              <td class="px-5 py-4">
+                <div class="flex items-center gap-3">
+                  @if (candidatePhotoUrl(app)) {
+                    <app-secure-image [src]="candidatePhotoUrl(app)" imgClass="h-9 w-9 rounded-full object-cover" [initials]="candidateInitials(app)" fallbackClass="h-9 w-9 rounded-full text-xs" />
+                  } @else {
+                    <div class="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-700">
+                      {{ candidateInitials(app) }}
+                    </div>
+                  }
+                  <div>
+                    <p class="font-semibold text-ink-900">{{ app.candidate?.firstName }} {{ app.candidate?.lastName }}</p>
+                    <p class="text-xs text-ink-400">{{ app.candidate?.professionalTitle || '—' }}</p>
+                  </div>
+                </div>
+              </td>
+              <td class="px-5 py-4"><app-score-badge [score]="app.scoreIa" /></td>
+              <td class="px-5 py-4"><app-status-badge [status]="app.status" /></td>
+              <td class="px-5 py-4 text-ink-500">{{ app.applicationDate | date: 'MMM d, y' }}</td>
+              <td class="px-5 py-4">
+                <div class="flex flex-wrap items-center justify-end gap-1.5">
+                  <a [routerLink]="['/recruiter/applications', app.id]" class="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-ink-600 hover:bg-ink-100">
+                    Profile
+                  </a>
+                  <button
+                    type="button"
+                    (click)="viewCv(app)"
+                    class="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-ink-600 hover:bg-ink-100"
+                  >
+                    View CV
+                  </button>
+                  <button
+                    type="button"
+                    (click)="reanalyze(app)"
+                    [disabled]="analyzingId() === app.id"
+                    class="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-50"
+                  >
+                    {{ analyzingId() === app.id ? 'Analyzing…' : 'Re-analyze' }}
+                  </button>
+                  <button
+                    type="button"
+                    (click)="setStatus(app, 'INTERVIEW')"
+                    [disabled]="updatingId() === app.id"
+                    class="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-50"
+                  >
+                    Invite
+                  </button>
+                  <button
+                    type="button"
+                    (click)="setStatus(app, 'ACCEPTED')"
+                    [disabled]="updatingId() === app.id"
+                    class="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-emerald-600 hover:bg-emerald-50"
+                  >
+                    Accept
+                  </button>
+                  <button
+                    type="button"
+                    (click)="setStatus(app, 'REJECTED')"
+                    [disabled]="updatingId() === app.id"
+                    class="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                  >
+                    Reject
+                  </button>
+                  <button
+                    type="button"
+                    (click)="deleteApplication(app)"
+                    class="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-ink-400 hover:bg-ink-100 hover:text-rose-600"
+                  >
+                    <span class="material-icons-round text-[16px]">delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}

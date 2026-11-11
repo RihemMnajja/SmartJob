@@ -1,0 +1,170 @@
+@if (loading()) {
+  <app-loading-spinner label="Loading job details…" />
+} @else if (!offer()) {
+  <div class="rounded-2xl border border-ink-100 bg-white p-10 text-center shadow-card">
+    <p class="text-ink-500">This job offer could not be found.</p>
+    <a routerLink="/candidate/jobs" class="mt-4 inline-block font-semibold text-primary-600 hover:underline">Back to job list</a>
+  </div>
+} @else {
+  <a routerLink="/candidate/jobs" class="mb-6 inline-flex items-center gap-1 text-sm font-semibold text-ink-500 hover:text-primary-600">
+    <span class="material-icons-round text-[18px]">arrow_back</span>
+    Back to jobs
+  </a>
+
+  <div class="grid gap-6 lg:grid-cols-3">
+    <div class="space-y-6 lg:col-span-2">
+      <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card sm:p-8">
+        <div class="flex items-start gap-4">
+          <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+            <span class="material-icons-round text-2xl">business_center</span>
+          </div>
+          <div>
+            <h1 class="font-display text-2xl font-bold text-ink-900">{{ offer()?.title }}</h1>
+            <p class="mt-1 text-sm text-ink-500">{{ offer()?.recruiter?.companyName || 'Confidential company' }}</p>
+          </div>
+        </div>
+
+        <div class="mt-5 flex flex-wrap gap-2 text-xs font-medium text-ink-500">
+          <span class="inline-flex items-center gap-1 rounded-full bg-ink-50 px-3 py-1.5"><span class="material-icons-round text-[15px]">place</span>{{ offer()?.location }}</span>
+          <span class="inline-flex items-center gap-1 rounded-full bg-ink-50 px-3 py-1.5"><span class="material-icons-round text-[15px]">schedule</span>{{ offer()?.contractType }}</span>
+          @if (offer()?.createdDate) {
+            <span class="inline-flex items-center gap-1 rounded-full bg-ink-50 px-3 py-1.5"><span class="material-icons-round text-[15px]">event</span>Posted {{ offer()?.createdDate | date: 'MMM d, y' }}</span>
+          }
+        </div>
+
+        <div class="mt-6">
+          <h3 class="font-display text-base font-semibold text-ink-900">About this role</h3>
+          <p class="mt-2 whitespace-pre-line text-sm leading-relaxed text-ink-600">{{ offer()?.description }}</p>
+        </div>
+
+        @if (requiredSkillsList().length) {
+          <div class="mt-6">
+            <h3 class="font-display text-base font-semibold text-ink-900">Required skills</h3>
+            <div class="mt-3 flex flex-wrap gap-2">
+              @for (skill of requiredSkillsList(); track skill) {
+                <span class="rounded-full bg-primary-50 px-3 py-1.5 text-xs font-semibold text-primary-700">{{ skill }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="space-y-6">
+      <input #cvInput type="file" accept="application/pdf" class="hidden" (change)="onFileSelected($event)" />
+
+      @if (checkFailed()) {
+        <div class="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+          <span class="material-icons-round text-[16px]">warning</span>
+          <span>We couldn't verify whether you've already applied to this job. If you have, applying again is safe — it won't duplicate your application status.</span>
+        </div>
+      }
+
+      @if (existingApplication() && applyStep() === 'idle') {
+        <div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-6 text-center">
+          <span class="material-icons-round text-3xl text-emerald-600">check_circle</span>
+          <p class="mt-3 font-display text-base font-semibold text-emerald-800">You've already applied</p>
+          <p class="mt-1 text-sm text-emerald-700">Track this application's status and AI score anytime.</p>
+          <a
+            [routerLink]="['/candidate/applications', existingApplication()?.id]"
+            class="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white"
+          >
+            View application
+          </a>
+        </div>
+      } @else if (applyStep() === 'idle') {
+        <div class="rounded-2xl border border-ink-100 bg-white p-6 text-center shadow-card">
+          <span class="material-icons-round text-3xl text-primary-500">upload_file</span>
+          <p class="mt-3 font-display text-base font-semibold text-ink-900">Ready to apply?</p>
+          <p class="mt-1 text-sm text-ink-500">Upload your CV (PDF). We'll create your application and score it with AI instantly.</p>
+          <button
+            type="button"
+            (click)="triggerFilePicker()"
+            class="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-500 py-3 text-sm font-semibold text-white shadow-lift transition hover:bg-primary-600"
+          >
+            <span class="material-icons-round text-[18px]">upload</span>
+            Upload CV &amp; Apply
+          </button>
+        </div>
+      } @else {
+        <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+          <p class="font-display text-base font-semibold text-ink-900">Application progress</p>
+          @if (selectedFileName()) {
+            <p class="mt-1 truncate text-xs text-ink-400">{{ selectedFileName() }}</p>
+          }
+
+          <div class="mt-5 space-y-4">
+            @for (step of [
+              { key: 'creating', label: 'Creating your application' },
+              { key: 'uploading', label: 'Uploading your CV' },
+              { key: 'analyzing', label: 'Running AI analysis' },
+              { key: 'done', label: 'Complete' }
+            ]; track step.key) {
+              <div class="flex items-center gap-3">
+                <span
+                  class="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold"
+                  [class.bg-emerald-500]="isStepDone(step.key)"
+                  [class.bg-primary-500]="applyStep() === step.key && step.key !== 'done'"
+                  [class.text-white]="isStepDone(step.key) || applyStep() === step.key"
+                  [class.bg-ink-100]="!isStepDone(step.key) && applyStep() !== step.key"
+                  [class.text-ink-400]="!isStepDone(step.key) && applyStep() !== step.key"
+                >
+                  @if (isStepDone(step.key)) {
+                    <span class="material-icons-round text-[16px]">check</span>
+                  } @else if (applyStep() === step.key) {
+                    <span class="material-icons-round animate-spin text-[16px]">progress_activity</span>
+                  } @else {
+                    &nbsp;
+                  }
+                </span>
+                <span class="text-sm font-medium text-ink-700">{{ step.label }}</span>
+              </div>
+            }
+          </div>
+
+          @if (applyStep() === 'done' && createdApplication()) {
+            <div class="mt-6 rounded-xl border border-ink-100 p-4">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-semibold text-ink-900">AI Match Result</p>
+                <app-score-badge [score]="createdApplication()?.scoreIa" />
+              </div>
+
+              @if (createdApplication()?.aiFeedback) {
+                <p class="mt-3 text-sm text-ink-600">{{ createdApplication()?.aiFeedback }}</p>
+              }
+
+              @if (createdApplication()?.strengths?.length) {
+                <div class="mt-4">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Strengths</p>
+                  <div class="mt-2 flex flex-wrap gap-1.5">
+                    @for (s of createdApplication()?.strengths; track s) {
+                      <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">{{ s }}</span>
+                    }
+                  </div>
+                </div>
+              }
+
+              @if (createdApplication()?.missingSkills?.length) {
+                <div class="mt-3">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-rose-600">Missing skills</p>
+                  <div class="mt-2 flex flex-wrap gap-1.5">
+                    @for (s of createdApplication()?.missingSkills; track s) {
+                      <span class="rounded-full bg-rose-50 px-2.5 py-1 text-xs font-medium text-rose-700">{{ s }}</span>
+                    }
+                  </div>
+                </div>
+              }
+
+              <a
+                [routerLink]="['/candidate/applications', createdApplication()?.id]"
+                class="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-ink-900 py-2.5 text-sm font-semibold text-white hover:bg-ink-800"
+              >
+                View full application
+              </a>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

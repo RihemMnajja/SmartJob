@@ -1,0 +1,450 @@
+@if (loading()) {
+  <app-loading-spinner label="Loading your profile…" />
+} @else {
+  <app-page-header eyebrow="Profile" title="My Profile" subtitle="Keep your profile up to date for better AI matching.">
+    @if (!editing()) {
+      <button
+        type="button"
+        (click)="startEditing()"
+        class="inline-flex items-center gap-2 rounded-xl bg-ink-900 px-4 py-2.5 text-sm font-semibold text-white shadow-lift transition hover:bg-ink-800"
+      >
+        <span class="material-icons-round text-[18px]">edit</span>
+        Edit profile
+      </button>
+    }
+  </app-page-header>
+
+  <input #photoInput type="file" accept="image/png,image/jpeg" class="hidden" (change)="onPhotoSelected($event)" />
+
+  @if (!editing()) {
+    <!-- ============ VIEW MODE ============ -->
+    <div class="grid gap-6 lg:grid-cols-3">
+      <div class="space-y-6 lg:col-span-1">
+        <div class="rounded-2xl border border-ink-100 bg-white p-6 text-center shadow-card">
+          <div class="group relative mx-auto h-24 w-24">
+            @if (profile()?.photo) {
+              <app-secure-image [src]="photoUrl()" imgClass="h-24 w-24 rounded-full object-cover ring-4 ring-primary-50" [initials]="initials()" fallbackClass="h-24 w-24 rounded-full ring-4 ring-primary-50 text-2xl" />
+            } @else {
+              <div class="flex h-24 w-24 items-center justify-center rounded-full bg-primary-500 text-2xl font-bold text-white ring-4 ring-primary-50">
+                {{ initials() }}
+              </div>
+            }
+            <button
+              type="button"
+              (click)="triggerPhotoUpload()"
+              [disabled]="uploadingPhoto()"
+              class="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-ink-900 text-white shadow-lift transition hover:bg-ink-700"
+            >
+              <span class="material-icons-round text-[16px]">{{ uploadingPhoto() ? 'progress_activity' : 'photo_camera' }}</span>
+            </button>
+          </div>
+
+          <h2 class="mt-4 font-display text-lg font-bold text-ink-900">
+            {{ profile()?.firstName || auth.currentUser()?.name }} {{ profile()?.lastName }}
+          </h2>
+          <p class="text-sm text-ink-500">{{ profile()?.professionalTitle || 'Add your professional title' }}</p>
+
+          <div class="mt-5 space-y-2 text-left text-sm text-ink-600">
+            @if (profile()?.city) {
+              <p class="flex items-center gap-2"><span class="material-icons-round text-[16px] text-ink-400">place</span>{{ profile()?.city }}</p>
+            }
+            <p class="flex items-center gap-2"><span class="material-icons-round text-[16px] text-ink-400">mail</span>{{ auth.currentUser()?.email }}</p>
+            @if (profile()?.phone) {
+              <p class="flex items-center gap-2"><span class="material-icons-round text-[16px] text-ink-400">call</span>{{ profile()?.phone }}</p>
+            }
+            @if (profile()?.linkedin) {
+              <p class="flex items-center gap-2"><span class="material-icons-round text-[16px] text-ink-400">link</span>{{ profile()?.linkedin }}</p>
+            }
+            @if (profile()?.github) {
+              <p class="flex items-center gap-2"><span class="material-icons-round text-[16px] text-ink-400">code</span>{{ profile()?.github }}</p>
+            }
+            @if (profile()?.portfolio) {
+              <p class="flex items-center gap-2"><span class="material-icons-round text-[16px] text-ink-400">public</span>{{ profile()?.portfolio }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+          <h3 class="font-display text-sm font-semibold text-ink-900">Skills</h3>
+          @if (!profile()?.skills?.length) {
+            <p class="mt-2 text-sm text-ink-400">No skills added yet.</p>
+          } @else {
+            <div class="mt-3 flex flex-wrap gap-2">
+              @for (s of profile()?.skills; track s.id) {
+                <span class="rounded-full bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700">{{ s.name }}</span>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+          <h3 class="font-display text-sm font-semibold text-ink-900">Languages</h3>
+          @if (!profile()?.languages?.length) {
+            <p class="mt-2 text-sm text-ink-400">No languages added yet.</p>
+          } @else {
+            <ul class="mt-3 space-y-2 text-sm">
+              @for (l of profile()?.languages; track l.id) {
+                <li class="flex items-center justify-between">
+                  <span class="text-ink-700">{{ l.name }}</span>
+                  <span class="text-xs font-semibold text-ink-400">{{ l.level }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="rounded-2xl border border-ink-100 bg-primary-50 p-5 text-sm text-primary-800">
+          <p class="flex items-center gap-2 font-semibold"><span class="material-icons-round text-[18px]">description</span>CV &amp; applications</p>
+          <p class="mt-2 text-primary-700">
+            Your CV is attached automatically each time you apply to a job — AI analyzes it instantly. Check
+            <a routerLink="/candidate/applications" class="font-semibold underline">My Applications</a> to see it per role.
+          </p>
+        </div>
+      </div>
+
+      <div class="space-y-6 lg:col-span-2">
+        <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+          <h3 class="font-display text-base font-semibold text-ink-900">Summary</h3>
+          <p class="mt-2 text-sm leading-relaxed text-ink-600">{{ profile()?.summary || 'Add a short professional summary to help recruiters and the AI understand your background.' }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+          <h3 class="font-display text-base font-semibold text-ink-900">Experience</h3>
+          @if (!profile()?.experiences?.length) {
+            <p class="mt-2 text-sm text-ink-400">No experience added yet.</p>
+          } @else {
+            <div class="mt-4 space-y-5">
+              @for (exp of profile()?.experiences; track exp.id) {
+                <div class="relative border-l-2 border-primary-100 pl-4">
+                  <span class="absolute -left-[5px] top-1.5 h-2.5 w-2.5 rounded-full bg-primary-500"></span>
+                  <div class="flex flex-wrap items-baseline justify-between gap-2">
+                    <p class="text-sm font-semibold text-ink-900">{{ exp.position }} · {{ exp.company }}</p>
+                    <p class="text-xs text-ink-400">{{ exp.startDate }} — {{ exp.endDate || 'Present' }}</p>
+                  </div>
+                  @if (exp.description) {
+                    <p class="mt-1 text-sm text-ink-600">{{ exp.description }}</p>
+                  }
+                  @if (exp.technologies) {
+                    <p class="mt-1 text-xs text-ink-400">{{ exp.technologies }}</p>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+          <h3 class="font-display text-base font-semibold text-ink-900">Education</h3>
+          @if (!profile()?.educations?.length) {
+            <p class="mt-2 text-sm text-ink-400">No education history added yet.</p>
+          } @else {
+            <div class="mt-4 space-y-4">
+              @for (edu of profile()?.educations; track edu.id) {
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                  <div>
+                    <p class="text-sm font-semibold text-ink-900">{{ edu.diploma }}</p>
+                    <p class="text-xs text-ink-500">{{ edu.establishment }}</p>
+                  </div>
+                  <p class="text-xs text-ink-400">{{ edu.year }}</p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+          <h3 class="font-display text-base font-semibold text-ink-900">Projects</h3>
+          @if (!profile()?.projects?.length) {
+            <p class="mt-2 text-sm text-ink-400">No projects added yet.</p>
+          } @else {
+            <div class="mt-4 grid gap-4 sm:grid-cols-2">
+              @for (proj of profile()?.projects; track proj.id) {
+                <div class="rounded-xl border border-ink-100 p-4">
+                  <p class="text-sm font-semibold text-ink-900">{{ proj.name }}</p>
+                  @if (proj.description) {
+                    <p class="mt-1 text-xs text-ink-500">{{ proj.description }}</p>
+                  }
+                  @if (proj.technologies) {
+                    <p class="mt-2 text-xs font-medium text-primary-600">{{ proj.technologies }}</p>
+                  }
+                  @if (proj.githubLink) {
+                    <a [href]="proj.githubLink" target="_blank" class="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:underline">
+                      <span class="material-icons-round text-[14px]">open_in_new</span> View project
+                    </a>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+          <h3 class="font-display text-base font-semibold text-ink-900">Certifications</h3>
+          @if (!profile()?.certifications?.length) {
+            <p class="mt-2 text-sm text-ink-400">No certifications added yet.</p>
+          } @else {
+            <ul class="mt-4 space-y-3">
+              @for (cert of profile()?.certifications; track cert.id) {
+                <li class="flex items-center justify-between text-sm">
+                  <div>
+                    <p class="font-semibold text-ink-900">{{ cert.name }}</p>
+                    <p class="text-xs text-ink-500">{{ cert.organization }}</p>
+                  </div>
+                  <span class="text-xs text-ink-400">{{ cert.year }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      </div>
+    </div>
+  } @else {
+    <!-- ============ EDIT MODE ============ -->
+    <form [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
+      <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+        <h3 class="font-display text-base font-semibold text-ink-900">Personal information</h3>
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">First name</label>
+            <input formControlName="firstName" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">Last name</label>
+            <input formControlName="lastName" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">Professional title</label>
+            <input formControlName="professionalTitle" placeholder="e.g. Senior Frontend Developer" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">Summary</label>
+            <textarea formControlName="summary" rows="3" placeholder="A short professional summary…" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"></textarea>
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">Phone</label>
+            <input formControlName="phone" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">Nationality</label>
+            <input formControlName="nationality" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">City</label>
+            <input formControlName="city" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">Address</label>
+            <input formControlName="address" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">Availability</label>
+            <select formControlName="availability" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100">
+              <option value="">Select…</option>
+              @for (a of availabilities; track a) { <option [value]="a">{{ a }}</option> }
+            </select>
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">Education level</label>
+            <select formControlName="educationLevel" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100">
+              <option value="">Select…</option>
+              @for (l of educationLevels; track l) { <option [value]="l">{{ l }}</option> }
+            </select>
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">School</label>
+            <input formControlName="school" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">LinkedIn</label>
+            <input formControlName="linkedin" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">GitHub</label>
+            <input formControlName="github" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+          <div>
+            <label class="mb-1.5 block text-sm font-medium text-ink-700">Portfolio</label>
+            <input formControlName="portfolio" class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Experiences -->
+      <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display text-base font-semibold text-ink-900">Experience</h3>
+          <button type="button" (click)="addExperience()" class="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:underline">
+            <span class="material-icons-round text-[16px]">add</span>Add
+          </button>
+        </div>
+        <div formArrayName="experiences" class="mt-4 space-y-4">
+          @for (exp of experiences.controls; track $index; let i = $index) {
+            <div [formGroupName]="i" class="relative rounded-xl border border-ink-100 p-4">
+              <button type="button" (click)="removeExperience(i)" class="absolute right-3 top-3 text-ink-300 hover:text-rose-500">
+                <span class="material-icons-round text-[18px]">close</span>
+              </button>
+              <div class="grid gap-3 pr-8 sm:grid-cols-2">
+                <input formControlName="position" placeholder="Position" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" />
+                <input formControlName="company" placeholder="Company" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" />
+                <input formControlName="startDate" placeholder="Start date (e.g. 2021)" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" />
+                <input formControlName="endDate" placeholder="End date (blank = present)" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" />
+                <input formControlName="technologies" placeholder="Technologies used" class="rounded-xl border border-ink-200 px-3 py-2 text-sm sm:col-span-2" />
+                <textarea formControlName="description" rows="2" placeholder="Description" class="rounded-xl border border-ink-200 px-3 py-2 text-sm sm:col-span-2"></textarea>
+              </div>
+            </div>
+          }
+          @if (experiences.length === 0) {
+            <p class="text-sm text-ink-400">No experience yet — click Add to create one.</p>
+          }
+        </div>
+      </div>
+
+      <!-- Education -->
+      <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display text-base font-semibold text-ink-900">Education</h3>
+          <button type="button" (click)="addEducation()" class="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:underline">
+            <span class="material-icons-round text-[16px]">add</span>Add
+          </button>
+        </div>
+        <div formArrayName="educations" class="mt-4 space-y-4">
+          @for (edu of educations.controls; track $index; let i = $index) {
+            <div [formGroupName]="i" class="relative rounded-xl border border-ink-100 p-4">
+              <button type="button" (click)="removeEducation(i)" class="absolute right-3 top-3 text-ink-300 hover:text-rose-500">
+                <span class="material-icons-round text-[18px]">close</span>
+              </button>
+              <div class="grid gap-3 pr-8 sm:grid-cols-3">
+                <input formControlName="diploma" placeholder="Diploma" class="rounded-xl border border-ink-200 px-3 py-2 text-sm sm:col-span-2" />
+                <input formControlName="year" placeholder="Year" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" />
+                <input formControlName="establishment" placeholder="Establishment" class="rounded-xl border border-ink-200 px-3 py-2 text-sm sm:col-span-3" />
+              </div>
+            </div>
+          }
+          @if (educations.length === 0) {
+            <p class="text-sm text-ink-400">No education history yet — click Add to create one.</p>
+          }
+        </div>
+      </div>
+
+      <!-- Skills -->
+      <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display text-base font-semibold text-ink-900">Skills</h3>
+          <button type="button" (click)="addSkill()" class="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:underline">
+            <span class="material-icons-round text-[16px]">add</span>Add
+          </button>
+        </div>
+        <div formArrayName="skills" class="mt-4 flex flex-wrap gap-3">
+          @for (skill of skills.controls; track $index; let i = $index) {
+            <div [formGroupName]="i" class="flex items-center gap-2 rounded-xl border border-ink-100 px-3 py-2">
+              <input formControlName="name" placeholder="Skill (e.g. Angular)" class="w-36 border-none bg-transparent text-sm focus:outline-none" />
+              <button type="button" (click)="removeSkill(i)" class="text-ink-300 hover:text-rose-500">
+                <span class="material-icons-round text-[16px]">close</span>
+              </button>
+            </div>
+          }
+          @if (skills.length === 0) {
+            <p class="text-sm text-ink-400">No skills yet — click Add to create one.</p>
+          }
+        </div>
+      </div>
+
+      <!-- Languages -->
+      <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display text-base font-semibold text-ink-900">Languages</h3>
+          <button type="button" (click)="addLanguage()" class="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:underline">
+            <span class="material-icons-round text-[16px]">add</span>Add
+          </button>
+        </div>
+        <div formArrayName="languages" class="mt-4 space-y-3">
+          @for (lang of languages.controls; track $index; let i = $index) {
+            <div [formGroupName]="i" class="flex items-center gap-3">
+              <input formControlName="name" placeholder="Language" class="flex-1 rounded-xl border border-ink-200 px-3 py-2 text-sm" />
+              <select formControlName="level" class="rounded-xl border border-ink-200 px-3 py-2 text-sm">
+                @for (lvl of languageLevels; track lvl) { <option [value]="lvl">{{ lvl }}</option> }
+              </select>
+              <button type="button" (click)="removeLanguage(i)" class="text-ink-300 hover:text-rose-500">
+                <span class="material-icons-round text-[18px]">close</span>
+              </button>
+            </div>
+          }
+          @if (languages.length === 0) {
+            <p class="text-sm text-ink-400">No languages yet — click Add to create one.</p>
+          }
+        </div>
+      </div>
+
+      <!-- Projects -->
+      <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display text-base font-semibold text-ink-900">Projects</h3>
+          <button type="button" (click)="addProject()" class="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:underline">
+            <span class="material-icons-round text-[16px]">add</span>Add
+          </button>
+        </div>
+        <div formArrayName="projects" class="mt-4 space-y-4">
+          @for (proj of projects.controls; track $index; let i = $index) {
+            <div [formGroupName]="i" class="relative rounded-xl border border-ink-100 p-4">
+              <button type="button" (click)="removeProject(i)" class="absolute right-3 top-3 text-ink-300 hover:text-rose-500">
+                <span class="material-icons-round text-[18px]">close</span>
+              </button>
+              <div class="grid gap-3 pr-8 sm:grid-cols-2">
+                <input formControlName="name" placeholder="Project name" class="rounded-xl border border-ink-200 px-3 py-2 text-sm sm:col-span-2" />
+                <input formControlName="technologies" placeholder="Technologies" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" />
+                <input formControlName="githubLink" placeholder="GitHub link" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" />
+                <textarea formControlName="description" rows="2" placeholder="Description" class="rounded-xl border border-ink-200 px-3 py-2 text-sm sm:col-span-2"></textarea>
+              </div>
+            </div>
+          }
+          @if (projects.length === 0) {
+            <p class="text-sm text-ink-400">No projects yet — click Add to create one.</p>
+          }
+        </div>
+      </div>
+
+      <!-- Certifications -->
+      <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display text-base font-semibold text-ink-900">Certifications</h3>
+          <button type="button" (click)="addCertification()" class="inline-flex items-center gap-1 text-sm font-semibold text-primary-600 hover:underline">
+            <span class="material-icons-round text-[16px]">add</span>Add
+          </button>
+        </div>
+        <div formArrayName="certifications" class="mt-4 space-y-4">
+          @for (cert of certifications.controls; track $index; let i = $index) {
+            <div [formGroupName]="i" class="relative rounded-xl border border-ink-100 p-4">
+              <button type="button" (click)="removeCertification(i)" class="absolute right-3 top-3 text-ink-300 hover:text-rose-500">
+                <span class="material-icons-round text-[18px]">close</span>
+              </button>
+              <div class="grid gap-3 pr-8 sm:grid-cols-3">
+                <input formControlName="name" placeholder="Certification name" class="rounded-xl border border-ink-200 px-3 py-2 text-sm sm:col-span-2" />
+                <input formControlName="year" placeholder="Year" class="rounded-xl border border-ink-200 px-3 py-2 text-sm" />
+                <input formControlName="organization" placeholder="Issuing organization" class="rounded-xl border border-ink-200 px-3 py-2 text-sm sm:col-span-3" />
+              </div>
+            </div>
+          }
+          @if (certifications.length === 0) {
+            <p class="text-sm text-ink-400">No certifications yet — click Add to create one.</p>
+          }
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pb-8">
+        <button type="button" (click)="cancelEditing()" class="rounded-xl px-5 py-2.5 text-sm font-semibold text-ink-600 hover:bg-ink-100">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          [disabled]="saving()"
+          class="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lift transition hover:bg-primary-600 disabled:opacity-60"
+        >
+          @if (saving()) {
+            <span class="material-icons-round animate-spin text-[18px]">progress_activity</span>
+          }
+          Save profile
+        </button>
+      </div>
+    </form>
+  }
+}

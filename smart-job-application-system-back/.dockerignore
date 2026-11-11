@@ -1,0 +1,26 @@
+# Maven
+target/
+
+# IntelliJ
+.idea/
+*.iml
+
+# Git
+.git/
+.gitignore
+
+# Uploaded CVs
+uploads/
+
+# Secrets
+.env
+application.properties
+application-local.properties
+application.yml
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

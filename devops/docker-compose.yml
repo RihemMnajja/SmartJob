@@ -1,0 +1,96 @@
+services:
+
+  # ==================================================
+  # BACKEND
+  # ==================================================
+  backend:
+    image: smartjob2026/smartjob-backend:1.0.0
+
+    container_name: smartjob-backend
+
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      SERVER_PORT: ${SERVER_PORT}
+
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      SPRING_JPA_SHOW_SQL: ${SPRING_JPA_SHOW_SQL}
+
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+
+      SPRING_MAIL_SMTP_AUTH: ${SPRING_MAIL_SMTP_AUTH}
+      SPRING_MAIL_SMTP_STARTTLS_ENABLE: ${SPRING_MAIL_SMTP_STARTTLS_ENABLE}
+      SPRING_MAIL_SMTP_STARTTLS_REQUIRED: ${SPRING_MAIL_SMTP_STARTTLS_REQUIRED}
+      SPRING_MAIL_SMTP_SSL_TRUST: ${SPRING_MAIL_SMTP_SSL_TRUST}
+      SPRING_MAIL_SMTP_SSL_CHECKSERVERIDENTITY: ${SPRING_MAIL_SMTP_SSL_CHECKSERVERIDENTITY}
+      SPRING_MAIL_SMTP_SSL_ENABLE: ${SPRING_MAIL_SMTP_SSL_ENABLE}
+      SPRING_MAIL_SMTP_SOCKETFACTORY_FALLBACK: ${SPRING_MAIL_SMTP_SOCKETFACTORY_FALLBACK}
+      SPRING_MAIL_DEBUG: ${SPRING_MAIL_DEBUG}
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+
+      FILE_UPLOAD_DIR: ${FILE_UPLOAD_DIR}
+
+      OLLAMA_URL: ${OLLAMA_URL}
+      OLLAMA_MODEL: ${OLLAMA_MODEL}
+
+      SPRINGDOC_API_DOCS_ENABLED: ${SPRINGDOC_API_DOCS_ENABLED}
+      SPRINGDOC_SWAGGER_UI_ENABLED: ${SPRINGDOC_SWAGGER_UI_ENABLED}
+
+    volumes:
+      - cv_data:/app/uploads/cv
+
+    expose:
+      - "8080"
+
+    networks:
+      - smartjob-network
+
+
+  # ==================================================
+  # FRONTEND
+  # ==================================================
+  frontend:
+    image: smartjob2026/smartjob-frontend:1.0.0
+
+    container_name: smartjob-frontend
+
+    restart: unless-stopped
+
+    depends_on:
+      - backend
+
+    ports:
+      - "80:80"
+
+    networks:
+      - smartjob-network
+
+
+# ==================================================
+# VOLUMES
+# ==================================================
+volumes:
+
+  cv_data:
+    name: smartjob-cv-data
+
+
+# ==================================================
+# NETWORK
+# ==================================================
+networks:
+
+  smartjob-network:
+    name: smartjob-network

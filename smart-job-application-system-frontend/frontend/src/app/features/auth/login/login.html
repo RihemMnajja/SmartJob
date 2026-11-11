@@ -1,0 +1,66 @@
+<app-auth-shell
+  headline="Pick up right where you left off."
+  subheadline="Sign in to track applications, manage job offers, and see your AI match scores."
+>
+  <p class="text-xs font-semibold uppercase tracking-wider text-primary-500">Welcome back</p>
+  <h1 class="mt-2 font-display text-2xl font-bold text-ink-900">Sign in to your account</h1>
+  <p class="mt-2 text-sm text-ink-500">
+    Don't have an account?
+    <a routerLink="/auth/register/candidate" class="font-semibold text-primary-600 hover:underline">Sign up as candidate</a>
+    or
+    <a routerLink="/auth/register/recruiter" class="font-semibold text-primary-600 hover:underline">as recruiter</a>.
+  </p>
+
+  <form [formGroup]="form" (ngSubmit)="submit()" class="mt-8 space-y-5">
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-ink-700" for="email">Email address</label>
+      <div class="relative">
+        <span class="material-icons-round absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-ink-400">mail_outline</span>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="you@example.com"
+          class="w-full rounded-xl border border-ink-200 bg-white py-3 pl-11 pr-4 text-sm text-ink-900 placeholder:text-ink-300 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+        />
+      </div>
+      @if (f.email.invalid && f.email.touched) {
+        <p class="mt-1.5 text-xs font-medium text-rose-600">Please enter a valid email address.</p>
+      }
+    </div>
+
+    <div>
+      <div class="mb-1.5 flex items-center justify-between">
+        <label class="block text-sm font-medium text-ink-700" for="password">Password</label>
+        <a routerLink="/auth/forgot-password" class="text-xs font-semibold text-primary-600 hover:underline">Forgot password?</a>
+      </div>
+      <div class="relative">
+        <span class="material-icons-round absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] text-ink-400">lock_outline</span>
+        <input
+          id="password"
+          [type]="showPassword() ? 'text' : 'password'"
+          formControlName="password"
+          placeholder="••••••••"
+          class="w-full rounded-xl border border-ink-200 bg-white py-3 pl-11 pr-11 text-sm text-ink-900 placeholder:text-ink-300 focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+        />
+        <button type="button" (click)="showPassword.set(!showPassword())" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-600">
+          <span class="material-icons-round text-[18px]">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+        </button>
+      </div>
+      @if (f.password.invalid && f.password.touched) {
+        <p class="mt-1.5 text-xs font-medium text-rose-600">Password is required.</p>
+      }
+    </div>
+
+    <button
+      type="submit"
+      [disabled]="submitting()"
+      class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-500 py-3.5 text-sm font-semibold text-white shadow-lift transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      @if (submitting()) {
+        <span class="material-icons-round animate-spin text-[18px]">progress_activity</span>
+      }
+      Sign in
+    </button>
+  </form>
+</app-auth-shell>

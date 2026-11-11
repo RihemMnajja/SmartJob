@@ -1,0 +1,84 @@
+<app-page-header eyebrow="Account" title="Settings" subtitle="Manage your password and account preferences." />
+
+<div class="max-w-2xl space-y-6">
+  <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+    <h3 class="font-display text-base font-semibold text-ink-900">Change password</h3>
+    <p class="mt-1 text-sm text-ink-500">Choose a strong password you don't use elsewhere.</p>
+
+    <form [formGroup]="form" (ngSubmit)="changePassword()" class="mt-5 space-y-4">
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-ink-700">Current password</label>
+        <input
+          type="password"
+          formControlName="oldPassword"
+          class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+        />
+        @if (f.oldPassword.invalid && f.oldPassword.touched) {
+          <p class="mt-1.5 text-xs font-medium text-rose-600">Current password is required.</p>
+        }
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-ink-700">New password</label>
+          <input
+            type="password"
+            formControlName="newPassword"
+            class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+          />
+          @if (f.newPassword.invalid && f.newPassword.touched) {
+            <p class="mt-1.5 text-xs font-medium text-rose-600">Min. 6 characters.</p>
+          }
+        </div>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-ink-700">Confirm new password</label>
+          <input
+            type="password"
+            formControlName="confirmPassword"
+            class="w-full rounded-xl border border-ink-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-4 focus:ring-primary-100"
+          />
+          @if (form.errors?.['mismatch'] && f.confirmPassword.touched) {
+            <p class="mt-1.5 text-xs font-medium text-rose-600">Passwords don't match.</p>
+          }
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        [disabled]="saving()"
+        class="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lift transition hover:bg-primary-600 disabled:opacity-60"
+      >
+        @if (saving()) {
+          <span class="material-icons-round animate-spin text-[18px]">progress_activity</span>
+        }
+        Update password
+      </button>
+    </form>
+  </div>
+
+  <div class="rounded-2xl border border-ink-100 bg-white p-6 shadow-card">
+    <h3 class="font-display text-base font-semibold text-ink-900">Session</h3>
+    <p class="mt-1 text-sm text-ink-500">Sign out of SmartJob on this device.</p>
+    <button
+      type="button"
+      (click)="logout()"
+      class="mt-4 inline-flex items-center gap-2 rounded-xl border border-ink-200 px-5 py-2.5 text-sm font-semibold text-ink-700 hover:bg-ink-100"
+    >
+      <span class="material-icons-round text-[18px]">logout</span>
+      Sign out
+    </button>
+  </div>
+
+  <div class="rounded-2xl border border-rose-100 bg-rose-50 p-6">
+    <h3 class="font-display text-base font-semibold text-rose-800">Danger zone</h3>
+    <p class="mt-1 text-sm text-rose-700">Deleting your profile removes your experience, education, and skills data. This can't be undone.</p>
+    <button
+      type="button"
+      (click)="deleteProfile()"
+      [disabled]="deleting()"
+      class="mt-4 inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:opacity-60"
+    >
+      <span class="material-icons-round text-[18px]">delete</span>
+      Delete my profile
+    </button>
+  </div>
+</div>
